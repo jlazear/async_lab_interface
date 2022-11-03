@@ -1,6 +1,7 @@
 from typing import Optional, Callable
+import inspect
 import asyncio
-from collections import deque
+from collections import deque, defaultdict
 from pyvisa import ResourceManager, InvalidSession
 import numpy as np
 
@@ -181,10 +182,22 @@ class AsynchronousInterface:
     # default SCPI commands
     def idn(self) -> None:
         """@expose Get the ID of the instrument. Asks the *IDN? command."""
-        callback = lambda r: self.outbox.append(f"{self.id} / idn: {r}")
+        callback = lambda r: self.outbox.append(f"{self.id} / idn: {r.strip().decode()}")
         self.ask("*IDN?", callback=callback)
 
     #TODO add other default commands...
+
+    def list_methods(self) -> None:
+        d = {}
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        for name, method in methods:
+            signature = inspect.signature(method)
+            doc = method.__doc__
+            if doc and doc.startswith("@expose"):
+                d[name] = {}
+                d[name]['signature'] = f"{name}({signature})"
+                d[name]['docstring'] = doc[len('@expose '):]
+        self.outbox.append(d)
 
 
 class PowerSupply(AsynchronousInterface):
@@ -204,10 +217,15 @@ class PowerSupply(AsynchronousInterface):
         callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_voltage: {r} V")
         self.read("VOLT?", callback=callback)
 
-    def output(self, enable: bool=True) -> None:
+    def set_output(self, enable: bool=True) -> None:
         """@expose Enable (if `enable`=True) or disable (if `enable`=False) the output."""
-        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / output: {'ON' if r else 'OFF'}")
-        self.ask(f"OUTPUT {1 if enable else 0}", callback=callback)
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / set_output: {'ON' if enable else 'OFF'}")
+        self.write(f"OUTPUT {1 if enable else 0}", callback=callback)
+
+    def get_output(self, enable: bool=True) -> None:
+        """@expose Get the current output state"""
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_output: {'ON' if r else 'OFF'}")
+        self.write(f"OUTPUT?", callback=callback)
 
 class VectorNetworkAnalyzer(AsynchronousInterface):
     """@expose This is a VNA."""
@@ -219,11 +237,19 @@ class VectorNetworkAnalyzer(AsynchronousInterface):
         """@expose Sets the frequency range from `start` to `end` in GHz, with `Npoints` steps."""
         callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / set_frequency_range: {start:.2f} -> {end:.2f} ({Npoints})")
         self.write(f"SENSE:FREQUENCY:START {start:.2f}", callback=False)
-        self.write(f"SENSE:FREQUENCY:STOP {start:.2f}", callback=False)
+        self.write(f"SENSE:FREQUENCY:STOP {end:.2f}", callback=False)
         self.write(f"SENSE:FREQUENCY:POINTS {Npoints}", callback=callback)
 
-    @staticmethod
-    def sparam_callback(r: bytes, fname:str, cmd:str) -> None:
+    def get_frequency_range(self) -> None:
+        """@expose Get the current frequency range: start(GHz)/end(GHz)/Npoints(unitless)"""
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_freq_start: {float(r):.2f}")
+        self.ask(f"SENSE:FREQUENCY:START?", callback=callback)
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_freq_stop: {float(r):.2f}")
+        self.ask(f"SENSE:FREQUENCY:STOP?", callback=callback)
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_freq_npoints: {int(r):d}")
+        self.ask(f"SENSE:FREQUENCY:POINTS?", callback=callback)
+
+    def sparam_callback(self, r: bytes, fname:str, cmd:str) -> None:
         """
         Suppose the data comes back formatted as
             val_re0,val_im0,val_re1,val_im1,...,val_reN-1,val_imN-1\n
@@ -234,31 +260,31 @@ class VectorNetworkAnalyzer(AsynchronousInterface):
 
         Then log that we saved the file.
         """
-        data = map(float, split(r, b','))
+        data = map(float, r.split(b','))
         data = [(data[i] + 1.j*data[i+1]) for i in range(len(data))[::2]]
         np.save(fname, data)
         self.output.append(f"{self.id} ({self.inst_type}) / {cmd}: {fname}")
 
     def s11(self, fname:str) -> None:
-        """@expose Make S11 measurement and write results to `fname`"""
+        """@expose Make S11 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
         callback = lambda r: self.sparam_callback(r, fname, 's11')
         self.write("CALCULATE:PARAMETER:SELECT 'CH1_S11_1", callback=False)
         self.ask("CALCULATE:DATA? SDATA", callback=callback)
 
     def s12(self, fname:str) -> None:
-        """@expose Make S12 measurement and write results to `fname`"""
+        """@expose Make S12 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
         callback = lambda r: self.sparam_callback(r, fname, 's12')
         self.write("CALCULATE:PARAMETER:SELECT 'CH1_S12_1", callback=False)
         self.ask("CALCULATE:DATA? SDATA", callback=callback)
 
     def s21(self, fname:str) -> None:
-        """@expose Make S21 measurement and write results to `fname`"""
+        """@expose Make S21 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
         callback = lambda r: self.sparam_callback(r, fname, 's21')
         self.write("CALCULATE:PARAMETER:SELECT 'CH1_S21_1", callback=False)
         self.ask("CALCULATE:DATA? SDATA", callback=callback)
 
     def s22(self, fname:str) -> None:
-        """@expose Make S22 measurement and write results to `fname`"""
+        """@expose Make S22 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
         callback = lambda r: self.sparam_callback(r, fname, 's22')
         self.write("CALCULATE:PARAMETER:SELECT 'CH1_S22_1", callback=False)
         self.ask("CALCULATE:DATA? SDATA", callback=callback)
