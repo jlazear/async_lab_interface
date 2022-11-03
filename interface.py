@@ -29,8 +29,6 @@ class AsynchronousInterface:
         # command and output FIFOs
         self.inbox = deque()
         self.outbox = deque() if (outbox is None) else outbox
-        if outbox is None:
-            self.outbox = deque()
         
         # control flag
         self._stop = True
@@ -192,7 +190,7 @@ class AsynchronousInterface:
 class PowerSupply(AsynchronousInterface):
     """@expose This is a power supply."""
     def __init__(self, resource_name: str, rm: ResourceManager, inst_type: str='PowerSupply', *args, **kwargs) -> None:
-        super().__init__(resource_name, rm)
+        super().__init__(resource_name, rm, *args, **kwargs)
         self.inst_type = inst_type
 
     def set_voltage(self, Vdc: float) -> None:
@@ -214,7 +212,7 @@ class PowerSupply(AsynchronousInterface):
 class VectorNetworkAnalyzer(AsynchronousInterface):
     """@expose This is a VNA."""
     def __init__(self, resource_name: str, rm: ResourceManager, inst_type: str='VNA', *args, **kwargs) -> None:
-        super().__init__(resource_name, rm)
+        super().__init__(resource_name, rm, *args, **kwargs)
         self.inst_type = inst_type
 
     def set_frequency_range(self, start:float, end:float, Npoints:int) -> None:
