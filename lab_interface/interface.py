@@ -173,8 +173,8 @@ class AsynchronousInterface:
             callback = self.passfunc
         elif not callback:
             callback = lambda x: self.outbox.append(f"{self.id} / sleep: {period} s")
-
-        self.add_to_inbox("sleep", period, callback=callback)
+        print(f"IN sleep {period = }")  #DELME
+        self.add_to_inbox("sleep_async", period, callback=callback)
 
         if self.interactive:
             asyncio.run(interface.process_all_commands())        

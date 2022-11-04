@@ -76,7 +76,7 @@ class Controller:
                 try:
                     method = getattr(self, msg['cmd'])
                     method(*msg['args'], **msg['kwargs'])
-                except AttributeError:
+                except (AttributeError, TypeError, ValueError):
                     self.outbox.append(f"Invalid command {msg}")
             else:
                 print("INSTRUMENT TYPE")  #DELME
@@ -104,21 +104,8 @@ class Controller:
             self.enqueue_interface()
             await asyncio.sleep(0.01)
 
-    # def enqueue_interface(self) -> None:
-    #     """Iterate through the station queues and move them to the corresponding interface queues."""
-    #     # while not self._stop:  #TODO #FIXME
-    #     if self.station_queue_not_empty():
-    #         for station, value in self.station_queues.items():
-    #             print(f"enqueueing {station}")  #DELME
-    #             for iid, (cmd, callback, args, kwargs) in value:
-    #                 #TODO add error handling for invalid instruments
-    #                 print(f"-->enqueueing {iid} {(cmd, callback, args, kwargs)}")  #DELME
-    #                 interface = self.instruments[iid]['interface']
-    #                 interface.add_to_inbox(cmd, *args, callback=callback, **kwargs)
-
     def enqueue_interface(self) -> None:
         """Iterate through the station queues and move them to the corresponding interface queues."""
-        # while not self._stop:  #TODO #FIXME
         if self.station_queue_not_empty():
             for station, value in self.station_queues.items():
                 print(f"enqueueing {station}")  #DELME
@@ -172,6 +159,8 @@ class Controller:
         toret = {}
         for iid, d in self.instruments.items():
             toret[iid] = (d['station'], d['resource_name'])
+        if not toret:
+            toret = "No instruments connected!"
         self.outbox.append(toret)
 
     def list_methods(self) -> None:

@@ -35,7 +35,7 @@ def bind_receive_queue(self, queue:deque, uri:str="amqp://guest:guest@127.0.0.1/
     task = consume_task()
     return task
 
-def bind_send_queue(self, outbox:deque, uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_queue"):
+def bind_send_queue(self, outbox:deque, uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_responses"):
     async def publish_task() -> None:
         connection = await aio_pika.connect_robust(uri)
         channel = await connection.channel()
@@ -53,28 +53,6 @@ def bind_send_queue(self, outbox:deque, uri:str="amqp://guest:guest@127.0.0.1/",
     
     task = publish_task()
     return task
-
-
-
-
-# def bind_send_queue(self, uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_queue", 
-#                                   queue_name:str="q_controller") -> Awaitable:
-#     connection = await aio_pika.connect_robust(uri)
-#     channel = await connection.channel()
-#     await channel.set_qos(prefetch_count=1)
-#     exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.FANOUT)
-#     queue = await channel.declare_queue(queue_name, auto_delete=False)
-#     await queue.bind(exchange)
-
-#     async def process_msg(msg:aio_pika.abc.AbstractIncomingMessage) -> None:
-#         async with msg.process():
-#             print(f"receive_queue {queue} received: {msg.body}")  #DELME
-#             self.inbox.append(msg.body)
-#         await asyncio.sleep(.01)
-    
-#     task = queue.consume(process_msg)
-#     return task
-
 
 #DELME junk for test
 async def wait(queue, t=None):
