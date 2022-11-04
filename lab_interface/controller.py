@@ -172,11 +172,13 @@ class Controller:
             doc = method.__doc__
             if doc and doc.startswith("@expose"):
                 d[name] = {}
-                d[name]['signature'] = f"{name}({signature})"
+                d[name]['signature'] = f"{name}{signature}"
                 d[name]['docstring'] = doc[len('@expose '):]
         self.outbox.append(d)
 
 
 if __name__ == "__main__":
-    controller = Controller(rm='default.yaml@sim')
+    from pathlib import Path
+    p = Path(__file__).parent / 'default.yaml'
+    controller = Controller(rm=f'{p}@sim')
     controller.run()

@@ -4,6 +4,12 @@ import asyncio
 import aioconsole
 import aio_pika
 
+welcomestr = """
+
+Welcome to the user terminal for this fabulously imaginary lab. Type your command below, or input
+    > quit
+to quit."""
+
 helpstr = """user_terminal help
 ********************************************************************************************************
 *** WARNING: there's very minimal error handling, so invalid arguments will likely crash everything! ***
@@ -82,6 +88,7 @@ async def send_message(uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:st
         await channel.set_qos(prefetch_count=1)
         exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.FANOUT)
 
+        print(welcomestr)
         global stop
         while not stop:
             line = await aioconsole.ainput('\n> ')

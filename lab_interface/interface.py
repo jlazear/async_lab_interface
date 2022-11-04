@@ -195,7 +195,7 @@ class AsynchronousInterface:
             doc = method.__doc__
             if doc and doc.startswith("@expose"):
                 d[name] = {}
-                d[name]['signature'] = f"{name}({signature})"
+                d[name]['signature'] = f"{name}{signature}"
                 d[name]['docstring'] = doc[len('@expose '):]
         self.outbox.append(d)
 
