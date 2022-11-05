@@ -3,7 +3,7 @@ import inspect
 import asyncio
 from collections import deque, defaultdict
 from pyvisa import ResourceManager, InvalidSession
-import numpy as np
+# import numpy as np
 
 
 class AsynchronousInterface:
@@ -262,7 +262,7 @@ class VectorNetworkAnalyzer(AsynchronousInterface):
         """
         data = map(float, r.split(b','))
         data = [(data[i] + 1.j*data[i+1]) for i in range(len(data))[::2]]
-        np.save(fname, data)
+        # np.save(fname, data)
         self.output.append(f"{self.id} ({self.inst_type}) / {cmd}: {fname}")
 
     def s11(self, fname:str) -> None:

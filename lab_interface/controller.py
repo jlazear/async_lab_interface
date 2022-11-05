@@ -12,11 +12,11 @@ instr_dict = {'VNA': VectorNetworkAnalyzer,
               'PowerSupply': PowerSupply}
 
 class Controller:
-    def __init__(self, rm: str=None, queue=None, responses=None, cntrl_id:str=None):
+    def __init__(self, rm: str=None, queue=None, responses=None, cntrl_id:str=None, uri=None):
         self.queue = deque()
-        receive_coro = aio_queues.bind_receive_queue(self, self.queue)  #TODO parameterize
+        receive_coro = aio_queues.bind_receive_queue(self, self.queue, uri=uri)  #TODO parameterize
         self.outbox = deque()
-        send_coro = aio_queues.bind_send_queue(self, self.outbox, exchange_name='e_responses')
+        send_coro = aio_queues.bind_send_queue(self, self.outbox, exchange_name='e_responses', uri=uri)
         self.id = cntrl_id or 'controller'
 
         # stations = {'stationname1': {'rn0': interface0, 'rn1': interface1, ...},
@@ -178,7 +178,15 @@ class Controller:
 
 
 if __name__ == "__main__":
+    import os
+    if os.getenv('DOCKER'):
+        uri = "amqp://guest:guest@rabbitmq/"
+        print(f"Detected you're in a Docker container, using uri = {uri}")
+    else:
+        uri = "amqp://guest:guest@localhost/"
+        print(f"Detected you're not in a Docker container, using uri = {uri}")
+
     from pathlib import Path
     p = Path(__file__).parent / 'default.yaml'
-    controller = Controller(rm=f'{p}@sim')
+    controller = Controller(rm=f'{p}@sim', uri=uri)
     controller.run()

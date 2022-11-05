@@ -12,9 +12,10 @@ async def process_message(message: aio_pika.abc.AbstractIncomingMessage, queue:d
             queue.append(message.body)
             await asyncio.sleep(.01)
 
-def bind_receive_queue(self, queue:deque, uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_queue", 
+def bind_receive_queue(self, queue:deque, uri:Optional[str]=None, exchange_name:str="e_queue", 
                             queue_name:str="q_controller"):
-    
+    if uri is None:
+        uri = "amqp://guest:guest@rabbitmq/"
     pmsg = functools.partial(process_message, queue=queue)
 
     async def consume_task() -> None:
@@ -35,7 +36,9 @@ def bind_receive_queue(self, queue:deque, uri:str="amqp://guest:guest@127.0.0.1/
     task = consume_task()
     return task
 
-def bind_send_queue(self, outbox:deque, uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_responses"):
+def bind_send_queue(self, outbox:deque, uri:Optional[str]=None, exchange_name:str="e_responses"):
+    if uri is None:
+        uri = "amqp://guest:guest@rabbitmq/"
     async def publish_task() -> None:
         connection = await aio_pika.connect_robust(uri)
         channel = await connection.channel()

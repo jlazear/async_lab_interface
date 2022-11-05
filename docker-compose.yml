@@ -1,0 +1,34 @@
+version: "3.2"
+services:
+  async_lab_interface:
+    image: async_lab_interface
+    # build: async_lab_interface
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    restart: on-failure
+    command: /bin/bash
+    environment:
+      - DOCKER=1
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    expose:
+      - 5672
+      - 15672
+    # ports:
+    #     - 5672:5672
+    #     - 15672:15672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:15672"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+    

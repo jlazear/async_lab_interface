@@ -70,8 +70,9 @@ async def process_response(message: aio_pika.abc.AbstractIncomingMessage) -> Non
         msg = json.loads(message.body)
         print(prettify(msg))
 
-async def consume_task(uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_responses", 
+async def consume_task(uri:str="amqp://guest:guest@rabbitmq/", exchange_name:str="e_responses", 
                             queue_name:str="q_responses") -> None:
+    print(f"Trying to connect to {uri}")  #DELME
     connection = await aio_pika.connect_robust(uri)
     channel = await connection.channel()
     await channel.set_qos(prefetch_count=1)
@@ -82,7 +83,7 @@ async def consume_task(uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:st
     while not stop:
         await asyncio.sleep(.01)
 
-async def send_message(uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:str="e_queue") -> None:
+async def send_message(uri:str="amqp://guest:guest@rabbitmq/", exchange_name:str="e_queue") -> None:
         connection = await aio_pika.connect_robust(uri)
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
@@ -123,8 +124,18 @@ async def send_message(uri:str="amqp://guest:guest@127.0.0.1/", exchange_name:st
             await asyncio.sleep(.2)
         await channel.close()
 
-async def main():
-    await asyncio.gather(consume_task(), send_message())
+async def main(uri:str = None):
+    if uri is None:
+        uri = "amqp://guest:guest@localhost/"
+    await asyncio.gather(consume_task(uri), send_message(uri))
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import os
+    if os.getenv('DOCKER'):
+        uri = "amqp://guest:guest@rabbitmq/"
+        print(f"Detected you're in a Docker container, using uri = {uri}")
+    else:
+        uri = "amqp://guest:guest@localhost/"
+        print(f"Detected you're not in a Docker container, using uri = {uri}")
+
+    asyncio.run(main(uri))

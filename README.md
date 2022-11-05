@@ -23,10 +23,22 @@ The big packages (numpy, PyVISA) are only required for the `controller.py`. The 
 
 Usage
 -----
+Start up rabbitmq. If you're using Docker for this:
+> docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:management
+Note that rabbitmq takes a bit to start up, so wait ~30 seconds before proceeding. You can check if
+rabbitmq is running by looking for its management portal:
+> http://localhost:15672
+
 Run `controller.py` in terminal 1.
  > python ./lab_interface/controller.py
+(or alternatively in the background by appending a `&`).
 
  Run `user_terminal.py` in terminal 2.
  > python ./user_terminal/user_terminal.py
 
- ctrl-c the controller when you're done. 
+ ctrl-c the controller when you're done.
+
+ Then shutdown rabbitmq if unneeded
+ > docker ps
+ >
+ > docker stop <unique hash fragment of rabbitmq container>
