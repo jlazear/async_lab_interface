@@ -219,12 +219,12 @@ class PowerSupply(AsynchronousInterface):
 
     def set_output(self, enable: bool=True) -> None:
         """@expose Enable (if `enable`=True) or disable (if `enable`=False) the output."""
-        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / set_output: {'ON' if enable else 'OFF'}")
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / set_output: {'1' if enable else '0'}")
         self.write(f"OUTPUT {1 if enable else 0}", callback=callback)
 
     def get_output(self, enable: bool=True) -> None:
         """@expose Get the current output state"""
-        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_output: {'ON' if r else 'OFF'}")
+        callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_output: {'1' if r else '0'}")
         self.write(f"OUTPUT?", callback=callback)
 
 class VectorNetworkAnalyzer(AsynchronousInterface):
