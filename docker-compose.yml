@@ -1,6 +1,7 @@
 version: "3.2"
 services:
   async_lab_interface:
+    # image: jlazear/async_lab_interface
     image: async_lab_interface
     # build: async_lab_interface
     stdin_open: true # docker run -i
