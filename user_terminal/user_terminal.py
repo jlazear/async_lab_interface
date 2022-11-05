@@ -77,6 +77,7 @@ async def consume_task(uri:str="amqp://guest:guest@rabbitmq/", exchange_name:str
     channel = await connection.channel()
     await channel.set_qos(prefetch_count=1)
     exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.FANOUT)
+    #TODO check if queue already exists and make another one, so don't stomp
     queue = await channel.declare_queue(queue_name)
     await queue.bind(exchange, '')
     await queue.consume(process_response)
