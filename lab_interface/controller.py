@@ -76,12 +76,16 @@ class Controller:
                 try:
                     method = getattr(self, msg['cmd'])
                     method(*msg['args'], **msg['kwargs'])
-                except (AttributeError, TypeError, ValueError):
+                except (AttributeError, TypeError, ValueError):  #TODO #FIXME enumerate the allowable errors...
                     self.outbox.append(f"Invalid command {msg}")
             else:
                 print("INSTRUMENT TYPE")  #DELME
                 print(f"{msg = }")  #DELME
                 iid = msg['id']
+                if iid not in self.instruments:
+                    print(f"Invalid instrument id: {iid}")  #TODO properly return error message to user...
+                    # self.output.append(f"Invalid instrument id: {iid}")
+                    return
                 try:
                     station = self.instruments[iid]['station']
                     newmsg = (msg['cmd'], None, msg['args'], msg['kwargs'])
@@ -157,6 +161,7 @@ class Controller:
     def list_instruments(self) -> None:
         """@expose List the instruments controlled by this controller"""
         toret = {}
+        print(f"{self.instruments = }")  #DELME
         for iid, d in self.instruments.items():
             toret[iid] = (d['station'], d['resource_name'])
         if not toret:

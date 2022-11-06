@@ -10,7 +10,7 @@ class AsynchronousInterface:
     def __init__(self, resource_name: str, rm: ResourceManager, 
                  inst_id: Optional[str]=None,
                  visa_timeout:int=10, read_term:str='\n',
-                 write_term:str='\n',
+                 write_term:str='\r\n',
                  aiosleep:float=0.01, timeout:int=300,
                  outbox:Optional[deque]=None,
                  interactive:bool=False) -> None:
@@ -64,7 +64,7 @@ class AsynchronousInterface:
         self.connect()
         toret = []
         c = None
-        while c != self.term_chars[-1].encode():
+        while c != self.read_term[-1].encode():
             await asyncio.sleep(self.aiosleep)
             c = self._conn.read_bytes(1)
             if c:
@@ -113,7 +113,7 @@ class AsynchronousInterface:
         else:
             try:
                 method(*args, **kwargs)
-            except TypeError:
+            except (AttributeError, TypeError):
                 print("Invalid command: {cmd} {args} {kwargs}")
                 self.outbox.append(f"Invalid command: {cmd} {args} {kwargs}")
         self._busy = False
