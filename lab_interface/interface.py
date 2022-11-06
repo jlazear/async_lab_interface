@@ -9,7 +9,8 @@ from pyvisa import ResourceManager, InvalidSession
 class AsynchronousInterface:
     def __init__(self, resource_name: str, rm: ResourceManager, 
                  inst_id: Optional[str]=None,
-                 visa_timeout:int=10, term_chars:str='\n',
+                 visa_timeout:int=10, read_term:str='\n',
+                 write_term:str='\n',
                  aiosleep:float=0.01, timeout:int=300,
                  outbox:Optional[deque]=None,
                  interactive:bool=False) -> None:
@@ -19,7 +20,8 @@ class AsynchronousInterface:
         self.id = inst_id or id(self)       # instrument ID
         self.visa_timeout = visa_timeout    # low-level VISA timeout (in ms)
         self.timeout = timeout              # timeout for interface actions
-        self.term_chars = term_chars        # message termination characters
+        self.read_term = read_term          # read message termination characters
+        self.write_term = write_term        # write message termination characters
         self.aiosleep = aiosleep            # internal asyncio loop sleep period
         self.interactive = interactive      # True = stand-alone mode, no pre-existing event loop
 
@@ -43,7 +45,8 @@ class AsynchronousInterface:
             self._conn.session
         except (InvalidSession, AttributeError):
             self._conn = self.resource_manager.open_resource(self.resource_name, timeout=self.visa_timeout,
-                                                             read_termination=self.term_chars)
+                                                             read_termination=self.read_term,
+                                                             write_termination=self.write_term)
 
     @staticmethod
     def passfunc(r: bytes) -> None:
@@ -108,7 +111,11 @@ class AsynchronousInterface:
                 print(f"task {self._task} timed out")  #DELME
                 #TODO handle timeouts meaningfully
         else:
-            method(*args, **kwargs)
+            try:
+                method(*args, **kwargs)
+            except TypeError:
+                print("Invalid command: {cmd} {args} {kwargs}")
+                self.outbox.append(f"Invalid command: {cmd} {args} {kwargs}")
         self._busy = False
 
     async def process_all_commands(self) -> None:
@@ -162,6 +169,7 @@ class AsynchronousInterface:
         elif not callback:
             callback = lambda x: self.outbox.append(f"{self.id} / write: {msg}")
 
+        print(f"--> instr.write {msg = }")  #DELME
         self.add_to_inbox("write_async", msg, callback=callback)
 
         if self.interactive:

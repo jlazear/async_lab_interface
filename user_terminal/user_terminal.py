@@ -97,10 +97,14 @@ async def send_message(uri:str="amqp://guest:guest@rabbitmq/", exchange_name:str
             if not line:
                 continue
             cmd_list = line.split()
-            if cmd_list[0].lower() in ('q', 'quit'):
-                stop = True
-            elif cmd_list[0].lower() in ('h', 'help'):
-                print(helpstr)
+            if len(cmd_list) == 1:
+                cmd = cmd_list[0]
+                if cmd.lower() in ('q', 'quit'):
+                    stop = True
+                elif cmd.lower() in ('h', 'help'):
+                    print(helpstr)
+                else:
+                    print("Invalid command. Did you mean one of these?\n\thelp\n\tquit")
             else:
                 try:
                     iid, cmd = cmd_list[:2]
