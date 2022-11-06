@@ -1,9 +1,20 @@
 version: "3.2"
 services:
   async_lab_interface:
-    # image: jlazear/async_lab_interface
-    image: async_lab_interface
-    # build: async_lab_interface
+    image: jlazear/async_lab_interface
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    restart: on-failure
+    command: /bin/bash
+    environment:
+      - DOCKER=1
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+
+  async_lab_interface_local:
+    build: .
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     restart: on-failure
