@@ -23,7 +23,14 @@ The big packages (numpy, PyVISA) are only required for the `controller.py`. The 
 
 Usage
 -----
-### Running locally
+ ### Running from docker
+ Clone this repo, then in the main directory run
+ > docker-compose run async_lab_interface
+
+ Wait ~30 seconds for the rabbitmq server to spin up in the background, then start the lab interface with
+ > ./run.sh
+ 
+### Running manually
 Start up rabbitmq. If you're using Docker for this:
 > docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:management
 
@@ -45,10 +52,3 @@ Run `controller.py` in terminal 1.
  > docker ps
  >
  > docker stop <unique hash fragment of rabbitmq container>
-
- ### Running from docker
- Clone this repo, then in the main directory run
- > docker-compose run async_lab_interface
-
- Wait ~30 seconds for the rabbitmq server to spin up in the background, then start the lab interface with
- > ./run.sh
