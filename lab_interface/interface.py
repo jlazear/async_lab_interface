@@ -9,21 +9,23 @@ from pyvisa import ResourceManager, InvalidSession
 class AsynchronousInterface:
     def __init__(self, resource_name: str, rm: ResourceManager, 
                  inst_id: Optional[str]=None,
+                 inst_type: Optional[str]=None,
                  visa_timeout:int=10, read_term:str='\n',
                  write_term:str='\r\n',
                  aiosleep:float=0.01, timeout:int=300,
                  outbox:Optional[deque]=None,
                  interactive:bool=False) -> None:
         #TODO add error checking
-        self.resource_name = resource_name  # name of VISA resource
-        self.resource_manager = rm          # VISA resource manager
-        self.id = inst_id or id(self)       # instrument ID
-        self.visa_timeout = visa_timeout    # low-level VISA timeout (in ms)
-        self.timeout = timeout              # timeout for interface actions
-        self.read_term = read_term          # read message termination characters
-        self.write_term = write_term        # write message termination characters
-        self.aiosleep = aiosleep            # internal asyncio loop sleep period
-        self.interactive = interactive      # True = stand-alone mode, no pre-existing event loop
+        self.resource_name = resource_name         # name of VISA resource
+        self.resource_manager = rm                 # VISA resource manager
+        self.id = inst_id or id(self)              # instrument ID
+        self.inst_type = inst_type or 'Generic'    # Instrument type
+        self.visa_timeout = visa_timeout           # low-level VISA timeout (in ms)
+        self.timeout = timeout                     # timeout for interface actions
+        self.read_term = read_term                 # read message termination characters
+        self.write_term = write_term               # write message termination characters
+        self.aiosleep = aiosleep                   # internal asyncio loop sleep period
+        self.interactive = interactive             # True = stand-alone mode, no pre-existing event loop
 
         # VISA connection to instrument
         self._conn = None
@@ -211,8 +213,7 @@ class AsynchronousInterface:
 class PowerSupply(AsynchronousInterface):
     """@expose This is a power supply."""
     def __init__(self, resource_name: str, rm: ResourceManager, inst_type: str='PowerSupply', *args, **kwargs) -> None:
-        super().__init__(resource_name, rm, *args, **kwargs)
-        self.inst_type = inst_type
+        super().__init__(resource_name, rm, inst_type=inst_type, *args, **kwargs)
 
     def set_voltage(self, Vdc: float) -> None:
         """@expose Set the voltage in V"""
@@ -238,8 +239,7 @@ class PowerSupply(AsynchronousInterface):
 class VectorNetworkAnalyzer(AsynchronousInterface):
     """@expose This is a VNA."""
     def __init__(self, resource_name: str, rm: ResourceManager, inst_type: str='VNA', *args, **kwargs) -> None:
-        super().__init__(resource_name, rm, *args, **kwargs)
-        self.inst_type = inst_type
+        super().__init__(resource_name, rm, inst_type=inst_type, *args, **kwargs)
 
     def set_frequency_range(self, start:float, end:float, Npoints:int) -> None:
         """@expose Sets the frequency range from `start` to `end` in GHz, with `Npoints` steps."""

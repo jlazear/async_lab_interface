@@ -341,6 +341,106 @@ devices:
         specs:
           valid: [0, 1]
           type: int
+  VNA2:
+    eom:
+      ASRL INSTR:
+        q: "\r\n"
+        r: "\n"
+      USB INSTR:
+        q: "\n"
+        r: "\n"
+      TCPIP INSTR:
+        q: "\r\n"
+        r: "\n"
+      GPIB INSTR:
+        q: "\n"
+        r: "\n"
+    dialogues:
+      - q: "*IDN?"
+        r: "VNA-abcd"
+    error:
+      error_queue:
+        - q: ':SYST:ERR?'
+          default: '0, No Error'
+          command_error: '1, Command error'
+    properties:
+      start:
+        default: 1.0
+        getter:
+          q: "SENSE:FREQUENCY:START?"
+          r: "{:+.8E}"
+        setter:
+          q: "SENSE:FREQUENCY:START {:.2f}"
+        specs:
+          min: 1
+          max: 6
+          type: float
+      stop:
+        default: 1.0
+        getter:
+          q: "SENSE:FREQUENCY:STOP?"
+          r: "{:+.8E}"
+        setter:
+          q: "SENSE:FREQUENCY:STOP {:.2f}"
+        specs:
+          min: 1
+          max: 6
+          type: float
+      Npoints:
+        default: 201
+        getter:
+          q: "SENSE:FREQUENCY:POINTS?"
+          r: "{:d}"
+        setter:
+          q: "SENSE:FREQUENCY:POINTS {:d}"
+        specs:
+          min: 1
+          max: 1001
+          type: int
+  PowerSupply2:
+    eom:
+      ASRL INSTR:
+        q: "\r\n"
+        r: "\n"
+      USB INSTR:
+        q: "\n"
+        r: "\n"
+      TCPIP INSTR:
+        q: "\r\n"
+        r: "\n"
+      GPIB INSTR:
+        q: "\n"
+        r: "\n"
+    dialogues:
+      - q: "*IDN?"
+        r: "PowerSupply-dcba"
+    error:
+      error_queue:
+        - q: ':SYST:ERR?'
+          default: '0, No Error'
+          command_error: '1, Command error'
+    properties:
+      volts:
+        default: 1.0
+        getter:
+          q: "VOLT?"
+          r: "{:+.8E}"
+        setter:
+          q: "VOLT {:.2f}"
+        specs:
+          min: 0
+          max: 25
+          type: float
+      output:
+        default: 0
+        getter:
+          q: "OUTPUT?"
+          r: "{:d}"
+        setter:
+          q: "OUTPUT {:d}"
+        specs:
+          valid: [0, 1]
+          type: int
 resources:
   ASRL1::INSTR:
     device: device 1
@@ -384,3 +484,7 @@ resources:
     device: VNA
   ASRL23::INSTR:
     device: PowerSupply
+  ASRL24::INSTR:
+    device: VNA2
+  ASRL25::INSTR:
+    device: PowerSupply2

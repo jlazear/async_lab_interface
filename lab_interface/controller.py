@@ -171,7 +171,7 @@ class Controller:
         toret = {}
         # print(f"{self.instruments = }")  #DELME
         for iid, d in self.instruments.items():
-            toret[iid] = (d['station'], d['resource_name'])
+            toret[iid] = (d['station'], d['resource_name'], d['interface'].inst_type)
         if not toret:
             toret = "No instruments connected!"
         self.outbox.append(toret)
