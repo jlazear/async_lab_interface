@@ -55,9 +55,9 @@ class AsynchronousInterface:
     # def to_outbox(self, value: bytes, source: Optional[str]=None) -> None:
     #     self.outbox.append(f"{self.id} / {source}}: {value}")
 
-    def busy(self) -> None:
+    def busy(self) -> bool:
         """Returns True if inbox is empty and not processing a command."""
-        return (self.inbox or self.busy)
+        return (self.inbox or self._busy)
 
     async def read_async(self, *args, **kwargs) -> str:
         """Asynchronous read of resource until `term_char` encountered. Will not timeout."""
@@ -113,9 +113,9 @@ class AsynchronousInterface:
         else:
             try:
                 method(*args, **kwargs)
-            except (AttributeError, TypeError):
-                print("Invalid command: {cmd} {args} {kwargs}")
-                self.outbox.append(f"Invalid command: {cmd} {args} {kwargs}")
+            except (AttributeError, TypeError) as e:
+                print(f"Invalid command: {self.id} {cmd} {args} {kwargs}")
+                self.outbox.append(f"Invalid command: {self.id} {cmd} {args} {kwargs}")
         self._busy = False
 
     async def process_all_commands(self) -> None:
@@ -223,7 +223,7 @@ class PowerSupply(AsynchronousInterface):
     def get_voltage(self) -> None:
         """@expose Get the voltage in V"""
         callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_voltage: {r} V")
-        self.read("VOLT?", callback=callback)
+        self.ask("VOLT?", callback=callback)
 
     def set_output(self, enable: bool=True) -> None:
         """@expose Enable (if `enable`=True) or disable (if `enable`=False) the output."""

@@ -71,20 +71,19 @@ class Controller:
         if self.queue:
             msg = json.loads(self.queue.popleft())
             if msg['id'] == 'controller':
-                print("CONTROLLER TYPE")  #DELME
-                print(f"{msg = }")  #DELME
+                # print("CONTROLLER TYPE")  #DELME
+                # print(f"{msg = }")  #DELME
                 try:
                     method = getattr(self, msg['cmd'])
                     method(*msg['args'], **msg['kwargs'])
                 except (AttributeError, TypeError, ValueError):  #TODO #FIXME enumerate the allowable errors...
                     self.outbox.append(f"Invalid command {msg}")
             else:
-                print("INSTRUMENT TYPE")  #DELME
-                print(f"{msg = }")  #DELME
+                # print("INSTRUMENT TYPE")  #DELME
+                # print(f"{msg = }")  #DELME
                 iid = msg['id']
                 if iid not in self.instruments:
-                    print(f"Invalid instrument id: {iid}")  #TODO properly return error message to user...
-                    # self.output.append(f"Invalid instrument id: {iid}")
+                    self.outbox.append(f"Invalid instrument id: {iid}")
                     return
                 try:
                     station = self.instruments[iid]['station']
@@ -108,11 +107,20 @@ class Controller:
             self.enqueue_interface()
             await asyncio.sleep(0.01)
 
+    def busy(self, station:str) -> bool:
+        if station not in self.stations:
+            raise KeyError(f"Invalid station {station}")
+        for rn, interface in self.stations[station].items():
+            if interface.busy():
+                return True
+        return False
+
     def enqueue_interface(self) -> None:
         """Iterate through the station queues and move them to the corresponding interface queues."""
         if self.station_queue_not_empty():
             for station, value in self.station_queues.items():
-                print(f"enqueueing {station}")  #DELME
+                if self.busy(station):
+                    continue
                 while value:
                     iid, (cmd, callback, args, kwargs) = value.popleft()
                     print(f"-->enqueueing {iid} {(cmd, callback, args, kwargs)}")  #DELME
@@ -161,7 +169,7 @@ class Controller:
     def list_instruments(self) -> None:
         """@expose List the instruments controlled by this controller"""
         toret = {}
-        print(f"{self.instruments = }")  #DELME
+        # print(f"{self.instruments = }")  #DELME
         for iid, d in self.instruments.items():
             toret[iid] = (d['station'], d['resource_name'])
         if not toret:
