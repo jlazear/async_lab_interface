@@ -13,13 +13,11 @@ Python packages
 >
 > aioconsole==0.5.1
 >
-> numpy==1.20.3
->
 > PyVISA==1.12.0
 >
 > PyVISA-sim==0.5.1
 
-The big packages (numpy, PyVISA) are only required for the `controller.py`. The `user_terminal.py` only needs `aio_pika` and `aioconsole`. Split these up in real use. 
+The big packages (~~numpy~~, PyVISA) are only required for the `controller.py`. The `user_terminal.py` only needs `aio_pika` and `aioconsole`. Split these up in real use. 
 
 Usage
 -----
@@ -29,7 +27,7 @@ Usage
 
  Wait ~30 seconds for the rabbitmq server to spin up in the background, then start the lab interface with
  > ./run.sh
- 
+
 ### Running manually
 Start up rabbitmq. If you're using Docker for this:
 > docker run -d -p 5672:5672 -p 15672:15672 rabbitmq:management
