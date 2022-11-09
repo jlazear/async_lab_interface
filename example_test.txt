@@ -1,0 +1,19 @@
+# An example test sequence
+print Running example test sequence!
+
+# Configure the power supply
+powersupply set_voltage 1.8
+powersupply set_output 1
+
+# Sleep a bit to let power supply stabilize
+powersupply sleep 3
+vna sleep 3
+
+# Configure VNA
+vna set_frequency_range 1.0 2.0 201
+
+# Collect S11 data
+vna s11 results.s1p
+
+# Turn off power supply
+powersupply set_output 0

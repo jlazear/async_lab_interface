@@ -114,4 +114,8 @@ get_voltage:
 > 1234 sleep 15
 > 4321 get_voltage
 > abcd idn
+
+# Execute some test sequences in parallel
+> run example_test.txt station_0
+> run example_test.txt station_1
 ~~~

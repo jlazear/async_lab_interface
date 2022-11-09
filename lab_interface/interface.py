@@ -88,7 +88,9 @@ class AsynchronousInterface:
 
     async def sleep_async(self, period: float=5, *args, **kwargs) -> None:
         """Sleep this instrument for `period` seconds."""
+        self._busy = True
         await asyncio.sleep(period)
+        self._busy = False
 
     def add_to_inbox(self, cmd: str, *args, callback: Optional[Callable[..., None]]=None, **kwargs) -> None:
         """Schedules command for execution. First pos arg is cmd, rest are args/kwargs."""
@@ -257,45 +259,31 @@ class VectorNetworkAnalyzer(AsynchronousInterface):
         callback = lambda r: self.outbox.append(f"{self.id} ({self.inst_type}) / get_freq_npoints: {int(r):d}")
         self.ask(f"SENSE:FREQUENCY:POINTS?", callback=callback)
 
-    def sparam_callback(self, r: bytes, fname:str, cmd:str) -> None:
-        """
-        Suppose the data comes back formatted as
-            val_re0,val_im0,val_re1,val_im1,...,val_reN-1,val_imN-1\n
-        where valn is a exponential-formatted number (e.g. 1.223E+04),
-        and _re and _im correspond to real and imaginary. 
-        This callback will split the components, reform as complex,
-        and write them to fname as a .npy file.
+    def snm(self, fname:str, param:str, Npoints:Optional[int]=201) -> None:
+        """Sleep a bit then write junk data to the specific file, simulating a S-parameter measurement"""
+        callback = lambda x: self.outbox.append(f"{self.id} / {param}: data saved to {fname}")
 
-        Then log that we saved the file.
-        """
-        data = map(float, r.split(b','))
-        data = [(data[i] + 1.j*data[i+1]) for i in range(len(data))[::2]]
-        # np.save(fname, data)
-        self.output.append(f"{self.id} ({self.inst_type}) / {cmd}: {fname}")
+        self.sleep(5, callback=callback)
+        with open(fname, 'w') as f:
+            import random
+            for i in range(Npoints):
+                f.write("{}\n".format(random.uniform(-60, 0)))
 
     def s11(self, fname:str) -> None:
-        """@expose Make S11 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
-        callback = lambda r: self.sparam_callback(r, fname, 's11')
-        self.write("CALCULATE:PARAMETER:SELECT 'CH1_S11_1", callback=False)
-        self.ask("CALCULATE:DATA? SDATA", callback=callback)
+        """@expose Make S11 measurement and write results to `fname`. NOTE: Toy placeholder. Sleeps for 5 sec, then writes junk."""
+        self.snm(fname, 's11')
 
     def s12(self, fname:str) -> None:
-        """@expose Make S12 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
-        callback = lambda r: self.sparam_callback(r, fname, 's12')
-        self.write("CALCULATE:PARAMETER:SELECT 'CH1_S12_1", callback=False)
-        self.ask("CALCULATE:DATA? SDATA", callback=callback)
+        """@expose Make S12 measurement and write results to `fname`. NOTE: Toy placeholder. Sleeps for 5 sec, then writes junk."""
+        self.snm(fname, 's12')
 
     def s21(self, fname:str) -> None:
-        """@expose Make S21 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
-        callback = lambda r: self.sparam_callback(r, fname, 's21')
-        self.write("CALCULATE:PARAMETER:SELECT 'CH1_S21_1", callback=False)
-        self.ask("CALCULATE:DATA? SDATA", callback=callback)
+        """@expose Make S21 measurement and write results to `fname`. NOTE: Toy placeholder. Sleeps for 5 sec, then writes junk."""
+        self.snm(fname, 's21')
 
     def s22(self, fname:str) -> None:
-        """@expose Make S22 measurement and write results to `fname`. NOTE: DOES NOT FUNCTION IN SIMULATOR!!!"""
-        callback = lambda r: self.sparam_callback(r, fname, 's22')
-        self.write("CALCULATE:PARAMETER:SELECT 'CH1_S22_1", callback=False)
-        self.ask("CALCULATE:DATA? SDATA", callback=callback)
+        """@expose Make S22 measurement and write results to `fname`. NOTE: Toy placeholder. Sleeps for 5 sec, then writes junk."""
+        self.snm(fname, 's22')
 
 
 if __name__ == "__main__":

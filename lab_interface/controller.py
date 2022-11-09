@@ -121,11 +121,12 @@ class Controller:
             for station, value in self.station_queues.items():
                 if self.busy(station):
                     continue
-                while value:
+                if value:
                     iid, (cmd, callback, args, kwargs) = value.popleft()
                     print(f"-->enqueueing {iid} {(cmd, callback, args, kwargs)}")  #DELME
                     interface = self.instruments[iid]['interface']
                     interface.add_to_inbox(cmd, *args, callback=callback, **kwargs)
+            
 
     # def add_to_responses(self) -> None:
     #     """Move outbox to responses message queue."""

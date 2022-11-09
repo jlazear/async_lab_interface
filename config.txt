@@ -1,0 +1,5 @@
+controller create_interface ASRL22::INSTR station_0
+controller create_interface ASRL23::INSTR station_0
+controller create_interface ASRL24::INSTR station_1
+controller create_interface ASRL25::INSTR station_1
+controller list_instruments
