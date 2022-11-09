@@ -49,7 +49,7 @@ Run `controller.py` in terminal 1.
  Then shutdown rabbitmq if unneeded
  > docker ps
  >
- > docker stop <unique hash fragment of rabbitmq container>
+ > docker stop \<unique hash fragment of rabbitmq container\>
 
 Demo
 ====
